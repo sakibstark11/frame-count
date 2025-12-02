@@ -1,0 +1,23 @@
+{
+  "name": "Frame Count API",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bullseye",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-eslint"
+      ],
+      "settings": {
+        "typescript.preferences.includePackageJsonAutoImports": "auto"
+      }
+    }
+  },
+  "forwardPorts": [3000],
+  "postCreateCommand": "npm install",
+  "remoteUser": "node"
+}
