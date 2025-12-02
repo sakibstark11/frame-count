@@ -1,12 +1,19 @@
 import express from 'express'
 import pinoHttp from 'pino-http'
 import { v4 as uuidv4 } from 'uuid'
+import * as fs from 'fs'
 import fileUploadRoutes from './routes/fileUpload'
 import { logger } from './utils/logger'
 import { requestTimingMiddleware } from './middleware/requestLogger'
 
 const app = express()
 const port = process.env.PORT ?? 3000
+
+const uploadDir = '/tmp/uploads'
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true })
+  logger.info(`Created upload directory: ${uploadDir}`)
+}
 
 app.use(pinoHttp({
   logger,

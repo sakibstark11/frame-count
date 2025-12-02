@@ -1,5 +1,5 @@
-import { countFramesFromBuffer } from '../utils/mp3Parser'
+import { countFramesFromFile } from '../utils/mp3Parser'
 
-export function processMP3File(buffer: Buffer): number {
-  return countFramesFromBuffer(buffer)
+export function processMP3File(filePath: string): number {
+  return countFramesFromFile(filePath)
 }
