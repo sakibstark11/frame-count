@@ -5,14 +5,14 @@ import * as fs from 'fs'
 import fileUploadRoutes from './routes/fileUpload'
 import { logger } from './utils/logger'
 import { requestTimingMiddleware } from './middleware/requestLogger'
+import { TEMP_FILE_DIR } from './utils/constants'
 
 const app = express()
 const port = process.env.PORT ?? 3000
 
-const uploadDir = '/tmp/uploads'
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-  logger.info(`Created upload directory: ${uploadDir}`)
+if (!fs.existsSync(TEMP_FILE_DIR)) {
+  fs.mkdirSync(TEMP_FILE_DIR, { recursive: true })
+  logger.info(`Created upload directory: ${TEMP_FILE_DIR}`)
 }
 
 app.use(pinoHttp({
