@@ -25,13 +25,7 @@ router.post('/file-upload', upload.single('file'), (req: Request, res: Response)
       req.log.warn('File upload attempt with no file');
       return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    req.log.info(`Processing MP3 file: ${req.file.originalname} (${req.file.size} bytes)`);
-    
     const frameCount = processMP3File(req.file.buffer);
-    
-    req.log.info(`Frame count result: ${frameCount}`);
-    
     res.json({ frameCount });
   } catch (error) {
     req.log.error({ error }, 'Error processing MP3 file');

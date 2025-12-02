@@ -27,7 +27,6 @@ function skipID3v2(buf: Buffer): number {
   return 10 + size;
 }
 
-// Parse MPEG frame header
 function parseFrameHeader(buf: Buffer, offset: number): FrameHeader | null {
   const b1 = buf[offset];
   const b2 = buf[offset + 1];
@@ -69,13 +68,11 @@ function isVBRIFrame(buf: Buffer, offset: number): boolean {
   return sig === 'VBRI';
 }
 
-// Count MP3 audio frames from file path
 export function countFramesFromFile(path: string): number {
   const buf = fs.readFileSync(path);
   return countFramesFromBuffer(buf);
 }
 
-// Count MP3 audio frames from buffer
 export function countFramesFromBuffer(buf: Buffer): number {
   let offset = skipID3v2(buf);
   let frames = 0;
