@@ -2,6 +2,16 @@
 
 A TypeScript API for counting MP3 audio frames. The application parses MP3 files and returns the exact number of audio frames without using external MP3 parsing libraries.
 
+# Thoughts on Scalability
+The spec states that the application must expose an endpoint at /file-upload that accepts an MP3 file via POST. If this format is fixed, it raises some concerns about scaling. Handling large files directly in a synchronous POST call can get messy and inefficient, especially if we can’t restructure the workflow.
+
+A more scalable design might look like this:
+
+- A /start-count endpoint where the client provides metadata (e.g., file size, number of chunks) and receives a job ID.
+- The client uploads chunks to /file-upload/{job-id}/{chunk-number}.
+- Once all chunks are uploaded, the job is added to a queue.
+- Workers pick up queued jobs, process the audio, store the results, and the client can fetch the final output afterwards.
+
 ## Features
 
 - RESTful API endpoint for MP3 frame counting
