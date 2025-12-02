@@ -1,12 +1,12 @@
-import express from 'express';
-import pinoHttp from 'pino-http';
-import { v4 as uuidv4 } from 'uuid';
-import fileUploadRoutes from './routes/fileUpload';
-import { logger } from './utils/logger';
-import { requestTimingMiddleware } from './middleware/requestLogger';
+import express from 'express'
+import pinoHttp from 'pino-http'
+import { v4 as uuidv4 } from 'uuid'
+import fileUploadRoutes from './routes/fileUpload'
+import { logger } from './utils/logger'
+import { requestTimingMiddleware } from './middleware/requestLogger'
 
-const app = express();
-const port = process.env.PORT || 3000;
+const app = express()
+const port = process.env.PORT ?? 3000
 
 app.use(pinoHttp({
   logger,
@@ -22,22 +22,22 @@ app.use(pinoHttp({
       statusCode: res.statusCode
     })
   }
-}));
+}))
 
-app.use(requestTimingMiddleware);
+app.use(requestTimingMiddleware)
 
 app.use((_req, res, next) => {
-  res.setHeader('Content-Type', 'application/json');
-  next();
-});
+  res.setHeader('Content-Type', 'application/json')
+  next()
+})
 
-app.use(fileUploadRoutes);
+app.use(fileUploadRoutes)
 
 app.get('/health', (req, res) => {
-  req.log.info('Health check requested');
-  res.json({ status: 'ok' });
-});
+  req.log.info('Health check requested')
+  res.json({ status: 'ok' })
+})
 
 app.listen(port, () => {
-  logger.info(`Server running on port ${port}`);
-});
+  logger.info(`Server running on port ${port}`)
+})

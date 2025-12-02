@@ -52,6 +52,10 @@ build:
 lint:
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm run lint
 
+# Run linting fixer in container
+lint-fix:
+	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm run lint:fix
+
 # Run tests in container
 test:
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm test
