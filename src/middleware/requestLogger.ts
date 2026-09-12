@@ -11,12 +11,15 @@ export function requestTimingMiddleware(req: Request, res: Response, next: NextF
   res.end = function (chunk?: any, encoding?: any, cb?: any): Response {
     const duration = Date.now() - startTime
 
-    req.log.info({
-      method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`
-    }, 'Request completed')
+    req.log.info(
+      {
+        method: req.method,
+        url: req.url,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`
+      },
+      'Request completed'
+    )
 
     return originalEnd.call(this, chunk, encoding, cb)
   }

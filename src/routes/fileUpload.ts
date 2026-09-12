@@ -1,60 +1,70 @@
 import { Router, Request, Response } from 'express'
-import multer from 'multer'
-import * as fs from 'fs'
-import { processMP3File } from '../services/frameCountService'
-import { FILE_SIZE_MAX_LIMIT, TEMP_FILE_DIR } from '../utils/constants'
+import busboy from 'busboy'
+import { createFrameCounter, FrameCounter } from '../utils/mp3Parser'
 
 const router = Router()
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: TEMP_FILE_DIR,
-    filename: (req, _file, cb) => {
-      cb(null, String(req.id))
+const MP3_CONTENT_TYPE = 'audio/mpeg'
+const MULTIPART_CONTENT_TYPE = 'multipart/form-data'
+const MP3_FILE_EXTENSION = '.mp3'
+
+enum UploadRejection {
+  NotMp3 = 'Only MP3 files are allowed',
+  MalformedMultipart = 'Malformed multipart body',
+  UnsupportedContentType = `Expected Content-Type ${MULTIPART_CONTENT_TYPE} or ${MP3_CONTENT_TYPE}`
+}
+
+type OnUploadDone = (rejection?: UploadRejection) => void
+
+function isMp3File(info: busboy.FileInfo): boolean {
+  return info.mimeType === MP3_CONTENT_TYPE || info.filename.endsWith(MP3_FILE_EXTENSION)
+}
+
+function countRawBody(req: Request, counter: FrameCounter, done: OnUploadDone): void {
+  req.on('data', counter.push)
+  req.on('end', done)
+}
+
+function countMultipartFiles(req: Request, counter: FrameCounter, done: OnUploadDone): void {
+  const parser = busboy({ headers: req.headers })
+  let rejection: UploadRejection | undefined
+  parser.on('file', (_field, stream, info) => {
+    if (!isMp3File(info)) {
+      rejection = UploadRejection.NotMp3
+      stream.resume()
+      return
     }
-  }),
-  limits: {
-    fileSize: FILE_SIZE_MAX_LIMIT
-  },
-  fileFilter: (_req, file, cb) => {
-    if (file.mimetype === 'audio/mpeg' || file.originalname.endsWith('.mp3')) {
-      cb(null, true)
-    } else {
-      cb(new Error('Only MP3 files are allowed'))
+    stream.on('data', counter.push)
+  })
+  parser.on('error', () => done(UploadRejection.MalformedMultipart))
+  parser.on('close', () => done(rejection))
+  req.pipe(parser)
+}
+
+router.post('/file-upload', (req: Request, res: Response) => {
+  const counter = createFrameCounter(req.log)
+
+  const respond: OnUploadDone = (rejection) => {
+    if (res.headersSent) return
+    if (rejection) {
+      req.log.warn({ rejection }, 'File upload rejected')
+      res.status(400).json({ error: rejection })
+      return
     }
-  }
-})
-
-router.post('/file-upload', upload.single('file'), (req: Request, res: Response) => {
-  const filePath = `${TEMP_FILE_DIR}/${req.id}`
-
-  try {
-    if (!req.file) {
-      req.log.warn('File upload attempt with no file')
-      return res.status(400).json({ error: 'No file uploaded' })
-    }
-
-
-    req.log.info({
-      filename: req.file.originalname,
-      fileSize: req.file.size,
-      tempPath: filePath
-    }, 'Processing MP3 file from disk')
-
-    const frameCount = processMP3File(filePath)
-
+    const frameCount = counter.finish()
     req.log.info({ frameCount }, 'MP3 processing completed')
-
     res.json({ frameCount })
-  } catch (error) {
-    req.log.error({ error }, 'Error processing MP3 file')
-    res.status(500).json({ error: 'Failed to process MP3 file' })
-  } finally {
-    if (filePath && fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath)
-      req.log.debug({ tempPath: filePath }, 'Temporary file cleaned up')
-    }
   }
+
+  if (req.is(MULTIPART_CONTENT_TYPE)) {
+    countMultipartFiles(req, counter, respond)
+    return
+  }
+  if (req.is(MP3_CONTENT_TYPE)) {
+    countRawBody(req, counter, respond)
+    return
+  }
+  respond(UploadRejection.UnsupportedContentType)
 })
 
 export default router

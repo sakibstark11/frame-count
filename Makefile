@@ -16,6 +16,8 @@ help:
 	@echo "  install     - Install dependencies in container"
 	@echo "  build       - Build TypeScript code in container"
 	@echo "  lint        - Run linting in container"
+	@echo "  lint-fix    - Run linting fixer in container"
+	@echo "  format      - Run prettier then eslint fix in container"
 	@echo "  test        - Run tests in container"
 	@echo "  test-watch  - Run tests in watch mode in container"
 	@echo "  typecheck   - Run TypeScript type checking in container"
@@ -56,6 +58,9 @@ lint:
 lint-fix:
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm run lint:fix
 
+format:
+	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm run format
+
 # Run tests in container
 test:
 	docker compose -f $(COMPOSE_FILE) exec $(SERVICE_NAME) npm test
@@ -73,4 +78,4 @@ clean:
 	docker compose -f $(COMPOSE_FILE) down -v
 	docker system prune -f
 
-.PHONY: help up down restart logs shell install build lint test test-watch typecheck clean
+.PHONY: help up down restart logs shell install build lint lint-fix format test test-watch typecheck clean
